@@ -10,8 +10,7 @@
 		"includes": [
 			"**",
 			"!**/dist/**",
-			"!src-other/**",
-			"!test-build/**",
+			"!test/build/**",
 			"!**/*.html",
 			"!**/*.ejs",
 			"!**/*.vue"

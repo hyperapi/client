@@ -166,7 +166,9 @@ for (const [index, route] of getRoutes(source_path).entries()) {
 }
 const overloads_lines = [];
 for (const [method, method_overloads_lines] of objectEntries(overloads)) if (method_overloads_lines.length > 0) overloads_lines.push(...method_overloads_lines, `${getFunctionName(method)}(route: string, args?: Record<string, unknown>): Promise<unknown> {`, `\treturn this.fetch('${method}', this.fillRoute(route, args), args);`, `}`, "");
-rmdirSync(output_path, { recursive: true });
+try {
+	rmdirSync(output_path, { recursive: true });
+} catch {}
 mkdirSync(output_src_path, { recursive: true });
 await Promise.all([
 	copyTemplateFile(".npmignore"),

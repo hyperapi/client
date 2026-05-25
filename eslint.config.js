@@ -5,7 +5,7 @@ import { defineConfig } from 'eslint/config';
 
 export default defineConfig([
 	{
-		ignores: ['dist/**', 'src-other/**', 'test-build/**', 'test-client.ts'],
+		ignores: ['dist/**', 'test/build/**', 'test/client.ts'],
 	},
 	...configCommon,
 	...configNode,

@@ -9,5 +9,5 @@
 		"./node_modules/@kirick/lint/configs/oxlint/typescript.jsonc",
 		"./node_modules/@kirick/lint/configs/oxlint/unicorn.jsonc"
 	],
-	"ignorePatterns": ["dist"]
+	"ignorePatterns": ["dist", "test/build"]
 }

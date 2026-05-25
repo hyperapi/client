@@ -5,13 +5,7 @@
 // oxlint-disable no-await-in-loop
 // oxlint-disable unicorn/no-process-exit
 
-import {
-	copyFileSync,
-	mkdirSync,
-	readFileSync,
-	rmdirSync,
-	writeFileSync,
-} from 'node:fs';
+import { mkdirSync, readFileSync, rmdirSync, writeFileSync } from 'node:fs';
 import nodePath from 'node:path';
 import { getRoutes, type HyperAPIMethod } from '@hyperapi/core/dev';
 import * as tsdown from 'tsdown';

@@ -1,6 +1,5 @@
 .DS_Store
 .env
 *.env
-dist
 node_modules
-src-other
+test/build

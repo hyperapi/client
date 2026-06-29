@@ -13,7 +13,7 @@
 	},
 	"dependencies": {
 		"@commander-js/extra-typings": "14.0.0",
-		"@hyperapi/core": "github:hyperapi/core#d3ebe406e7b366e37e307a713de5a7898fe5858d",
+		"@hyperapi/core": "github:hyperapi/core#7df8a93e13aef72083aa5f92f563b1b89477a3a6",
 		"typescript": "6.0.2"
 	},
 	"optionalDependencies": {
@@ -24,12 +24,15 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.10",
-		"@kirick/lint": "0.3.1",
+		"@kirick/lint": "0.3.3",
 		"@types/node": "24.12.3",
 		"eslint": "10.2.0",
 		"oxlint": "1.58.0",
 		"publint": "0.3.21",
 		"unplugin-unused": "0.5.4"
+	},
+	"_devpack": {
+		"@hyperapi/core": "../core"
 	},
 	"scripts": {
 		"build": "tsdown src/main.ts --clean --publint --unused --dts --format esm",

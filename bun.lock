@@ -6,21 +6,23 @@
       "name": "@hyperapi/client",
       "dependencies": {
         "@commander-js/extra-typings": "14.0.0",
-        "@hyperapi/core": "github:hyperapi/core#d3ebe406e7b366e37e307a713de5a7898fe5858d",
-        "@kirick/tasq": "^0.3.0",
-        "tsdown": "0.22.0",
-        "type-fest": "5.6.0",
+        "@hyperapi/core": "github:hyperapi/core#7df8a93e13aef72083aa5f92f563b1b89477a3a6",
         "typescript": "6.0.2",
-        "valibot": "1.4.0",
       },
       "devDependencies": {
         "@biomejs/biome": "2.4.10",
-        "@kirick/lint": "0.3.1",
+        "@kirick/lint": "0.3.3",
         "@types/node": "24.12.3",
         "eslint": "10.2.0",
         "oxlint": "1.58.0",
         "publint": "0.3.21",
         "unplugin-unused": "0.5.4",
+      },
+      "optionalDependencies": {
+        "@kirick/tasq": "^0.3.0",
+        "tsdown": "0.22.0",
+        "type-fest": "5.6.0",
+        "valibot": "1.4.0",
       },
     },
   },
@@ -101,7 +103,7 @@
 
     "@humanwhocodes/retry": ["@humanwhocodes/retry@0.4.3", "", {}, "sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ=="],
 
-    "@hyperapi/core": ["@hyperapi/core@github:hyperapi/core#d3ebe40", { "dependencies": { "itty-router": "5.0.22", "neoevents": "0.3.0", "type-fest": "4.41.0" } }, "hyperapi-core-d3ebe40", "sha512-JWhsWzkCeldrxFa6g470BPM0cr+FR87SxeEnnJu5dWirXm3KNhezW2dOvm6aUj5DrmsGJoeizKmHp24FL0f7tg=="],
+    "@hyperapi/core": ["@hyperapi/core@github:hyperapi/core#7df8a93", { "dependencies": { "itty-router": "5.0.24", "neoevents": "0.3.0", "type-fest": "5.7.0" } }, "hyperapi-core-7df8a93", "sha512-5jLsgjseX9fww7Q0trFjE4o0rTbY58HinKixvpqX1uP7jsK/ukG/W6YFWibFvk4gr+nWwz8XT45u9u00pComXA=="],
 
     "@jridgewell/gen-mapping": ["@jridgewell/gen-mapping@0.3.13", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.0", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA=="],
 
@@ -113,7 +115,7 @@
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
-    "@kirick/lint": ["@kirick/lint@0.3.1", "", { "dependencies": { "@stylistic/eslint-plugin": "5.10.0", "eslint": "10.2.0", "eslint-plugin-jsdoc": "62.9.0", "eslint-plugin-n": "17.24.0", "eslint-plugin-promise": "7.2.1", "eslint-plugin-unicorn": "64.0.0", "eslint-plugin-vue": "10.8.0", "typescript-eslint": "8.58.0" }, "bin": { "lint": "dist/main.mjs" } }, "sha512-NoH3VVby7x/mtHtSoA18ECJVtYcmm8P8d5PHUsxq9gXzxiiaQJa2FrTKVODyHlc3gaWc5wBdZgCKtKrDEL0LZg=="],
+    "@kirick/lint": ["@kirick/lint@0.3.3", "", { "dependencies": { "@stylistic/eslint-plugin": "5.10.0", "eslint": "10.2.0", "eslint-plugin-jsdoc": "62.9.0", "eslint-plugin-n": "17.24.0", "eslint-plugin-promise": "7.2.1", "eslint-plugin-unicorn": "64.0.0", "eslint-plugin-vue": "10.8.0", "typescript-eslint": "8.58.0" }, "bin": { "lint": "dist/main.mjs" } }, "sha512-Av3gPnaQUMOn9Tjw4PQEhPS8z/loehFV9CWEt1FD7Oc1q0y1NLTPIxjhyGEg0NM1oX4vJUh3zJqgGeLsRWYhfQ=="],
 
     "@kirick/tasq": ["@kirick/tasq@0.3.3", "", { "dependencies": { "cbor-x": "1.6.0" }, "peerDependencies": { "redis": "^4.1" } }, "sha512-9taORe+s+yNYOq59qIBJYAl59vDUOzfvXMayhjaVXKomLwUBO3bc3HAQEzaa2BjtwJIpPmoJ+AFP01+NBDWpiQ=="],
 
@@ -417,7 +419,7 @@
 
     "isexe": ["isexe@2.0.0", "", {}, "sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw=="],
 
-    "itty-router": ["itty-router@5.0.22", "", {}, "sha512-9hmdGErWdYDOurGYxSbqLhy4EFReIwk71hMZTJ5b+zfa2zjMNV1ftFno2b8VjAQvX615gNB8Qxbl9JMRqHnIVA=="],
+    "itty-router": ["itty-router@5.0.24", "", {}, "sha512-PXij1qGKtE6jg3dLgrTRdh/Frovl5Wc4Av67sD2xfhDPrgNt4u79++/il8/c/OfZGkhD/8uYJub8tjo+H165rA=="],
 
     "jiti": ["jiti@2.7.0", "", { "bin": { "jiti": "lib/jiti-cli.mjs" } }, "sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ=="],
 
@@ -593,7 +595,7 @@
 
     "@eslint-community/eslint-utils/eslint-visitor-keys": ["eslint-visitor-keys@3.4.3", "", {}, "sha512-wpc+LXeiyiisxPlEkUzU6svyS1frIO3Mgxj1fdy7Pm8Ygzguax2N3Fa/D/ag1WqbOprdI+uY6wMUl8/a2G+iag=="],
 
-    "@hyperapi/core/type-fest": ["type-fest@4.41.0", "", {}, "sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA=="],
+    "@hyperapi/core/type-fest": ["type-fest@5.7.0", "", { "dependencies": { "tagged-tag": "^1.0.0" } }, "sha512-1URUxUqfHFM1c+zfSPsa3gnkO7Aq21qyH75SIduNYz4SzY964rn1X2vCMQaHSHhktiw+0kPa2iyb6PUpXqB6Vg=="],
 
     "@stylistic/eslint-plugin/eslint-visitor-keys": ["eslint-visitor-keys@4.2.1", "", {}, "sha512-Uhdk5sfqcee/9H/rCOJikYz67o0a2Tw2hGRPOG2Y1R2dg7brRe1uG0yaNQDHu+TO/uQPF/5eCapvYSmHUjt7JQ=="],
 

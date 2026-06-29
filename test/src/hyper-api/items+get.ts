@@ -1,6 +1,6 @@
 import * as v from 'valibot';
 import { hyperApi } from '../setup.js';
-import type { ApiUserShort } from './users/[user_id].get.js';
+import type { ApiUserShort } from './users/[user_id]+get.js';
 
 export const argsSchema = v.strictObject({
 	user_id: v.number(),

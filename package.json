@@ -38,7 +38,7 @@
 		"build": "tsdown src/main.ts --clean --publint --unused --dts --format esm",
 		"check": "bun run lint && bun run build && bun run test",
 		"lint": "biome format && oxlint && eslint . && tsc",
-		"test": "echo 'No tests specified' && exit 0"
+		"test": "node dist/main.mjs --name=@mnpl/test-client --type=http -d test/build test/src/hyper-api"
 	},
 	"repository": {
 		"type": "git",

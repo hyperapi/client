@@ -3,15 +3,18 @@ import nodePath from 'node:path';
 import * as v from 'valibot';
 import { options, output_path } from '../state.js';
 
+const dependenciesSchema = v.optional(v.record(v.string(), v.string()), () => {
+	return {};
+});
 const parsePackageJson = v.parser(
 	v.pipe(
 		v.string(),
 		v.parseJson(),
 		v.object({
 			version: v.string(),
-			dependencies: v.record(v.string(), v.string()),
-			optionalDependencies: v.record(v.string(), v.string()),
-			devDependencies: v.record(v.string(), v.string()),
+			dependencies: dependenciesSchema,
+			optionalDependencies: dependenciesSchema,
+			devDependencies: dependenciesSchema,
 		}),
 		v.transform((value) => {
 			return {

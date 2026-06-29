@@ -33,11 +33,14 @@ const output_path = nodePath.join(process.cwd(), options.outDir);
 const output_src_path = nodePath.join(output_path, "src");
 //#endregion
 //#region src/configs/package.json.ts
+const dependenciesSchema = v.optional(v.record(v.string(), v.string()), () => {
+	return {};
+});
 const parsePackageJson = v.parser(v.pipe(v.string(), v.parseJson(), v.object({
 	version: v.string(),
-	dependencies: v.record(v.string(), v.string()),
-	optionalDependencies: v.record(v.string(), v.string()),
-	devDependencies: v.record(v.string(), v.string())
+	dependencies: dependenciesSchema,
+	optionalDependencies: dependenciesSchema,
+	devDependencies: dependenciesSchema
 }), v.transform((value) => {
 	return {
 		version: value.version,

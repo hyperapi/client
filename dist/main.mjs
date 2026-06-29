@@ -47,7 +47,8 @@ const parsePackageJson = v.parser(v.pipe(v.string(), v.parseJson(), v.object({
 			...value.devDependencies
 		}
 	};
-}), v.check((value) => value.allDependencies["@hyperapi/core"] !== void 0, "Missing @hyperapi/core dependency"), v.check((value) => value.allDependencies["type-fest"] !== void 0, "Missing type-fest dependency"), v.check((value) => value.allDependencies.valibot !== void 0, "Missing valibot dependency"), v.check((value) => value.allDependencies["@kirick/tasq"] !== void 0, "Missing @kirick/tasq dependency")));
+}), v.check((value) => value.allDependencies["@hyperapi/core"] !== void 0, "Missing @hyperapi/core dependency")));
+const PACKAGE_JSON = parsePackageJson(await readFile(nodePath.join(import.meta.dirname, "../package.json"), "utf8"));
 /** Creates package.json for the client library. */
 async function createPackageJson() {
 	const data = parsePackageJson(await readFile(nodePath.join(process.cwd(), "package.json"), "utf8"));
@@ -67,10 +68,10 @@ async function createPackageJson() {
 		} },
 		dependencies: {
 			"@hyperapi/core": data.allDependencies["@hyperapi/core"],
-			"type-fest": data.allDependencies["type-fest"],
-			valibot: data.allDependencies.valibot
+			"type-fest": data.allDependencies["type-fest"] ?? PACKAGE_JSON.allDependencies["type-fest"],
+			valibot: data.allDependencies.valibot ?? PACKAGE_JSON.allDependencies.valibot
 		},
-		peerDependencies: { "@kirick/tasq": data.allDependencies["@kirick/tasq"] }
+		peerDependencies: { "@kirick/tasq": data.allDependencies["@kirick/tasq"] ?? PACKAGE_JSON.allDependencies["@kirick/tasq"] }
 	}, null, "	"), "utf8");
 }
 //#endregion

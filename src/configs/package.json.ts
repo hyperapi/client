@@ -34,7 +34,10 @@ const parsePackageJson = v.parser(
 );
 
 const PACKAGE_JSON = parsePackageJson(
-	await readFile(nodePath.join(import.meta.dirname, '../package.json'), 'utf8'),
+	await readFile(
+		nodePath.join(import.meta.dirname, '../../package.json'),
+		'utf8',
+	),
 );
 
 /** Creates package.json for the client library. */

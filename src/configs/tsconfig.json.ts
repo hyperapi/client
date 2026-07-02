@@ -5,7 +5,7 @@ import { output_path } from '../state.js';
 /** Creates tsconfig.json for the client library. */
 export async function createTsconfigJson(): Promise<void> {
 	const content = await readFile(
-		nodePath.join(import.meta.dirname, '..', 'tsconfig.json'),
+		nodePath.join(import.meta.dirname, '../../tsconfig.json'),
 		'utf8',
 	);
 

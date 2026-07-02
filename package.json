@@ -35,10 +35,11 @@
 		"@hyperapi/core": "../core"
 	},
 	"scripts": {
-		"build": "tsdown src/main.ts --clean --publint --unused --dts --format esm",
+		"build": "tsdown src/main.ts --clean --unbundle --dts --format esm --unused --publint",
 		"check": "bun run lint && bun run build && bun run test",
 		"lint": "biome format && oxlint && eslint . && tsc",
-		"test": "node dist/main.mjs --name=@mnpl/test-client --type=http -d test/build test/src/hyper-api"
+		"test": "bun run src/main.ts --name=@hyper-api/test-client --type=http -d test/build test/src/hyper-api",
+		"test:dist": "bun run build && node dist/main.mjs --name=@hyper-api/test-client --type=http -d test/build test/src/hyper-api"
 	},
 	"repository": {
 		"type": "git",

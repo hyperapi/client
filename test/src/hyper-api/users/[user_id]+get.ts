@@ -14,7 +14,7 @@ export type ApiUserShort = {
 	name: string;
 };
 
-type ApiUser = ApiUserShort & {
+export type ApiUser = ApiUserShort & {
 	friends_count: number;
 };
 

@@ -1,124 +1,13 @@
 #!/usr/bin/env node
-import { mkdirSync, readFileSync, rmdirSync, writeFileSync } from "node:fs";
+import { options, output_path, output_src_path, source_path } from "./state.mjs";
+import { createPackageJson } from "./configs/package.json.mjs";
+import { createTsconfigJson } from "./configs/tsconfig.json.mjs";
+import { scanExports } from "./exports.mjs";
+import { copyTemplateFile } from "./file.mjs";
+import fs from "node:fs";
 import nodePath from "node:path";
 import { getRoutes } from "@hyperapi/core/dev";
 import * as tsdown from "tsdown";
-import { copyFile, readFile, writeFile } from "node:fs/promises";
-import * as v from "valibot";
-import { program } from "@commander-js/extra-typings";
-import ts from "typescript";
-//#region src/state.ts
-program.argument("<source>").requiredOption("-d, --out-dir <value>", "output directory for the generated client").requiredOption("--type <value>", "client type (http, tasq)").option("--topic <value>", "Tasq topic to use (when type = tasq)").requiredOption("--name <value>", "generated package name");
-program.parse();
-const options = v.parse(v.intersect([v.object({
-	outDir: v.string(),
-	name: v.string()
-}), v.variant("type", [v.pipe(v.object({
-	type: v.literal("tasq"),
-	topic: v.string()
-}), v.transform((value) => {
-	return {
-		type: "tasq",
-		tasq: { topic: value.topic }
-	};
-})), v.pipe(v.object({ type: v.literal("http") }), v.transform(() => {
-	return {
-		type: "http",
-		http: {}
-	};
-}))])]), program.opts());
-if (!program.args[0]) throw new Error("source file is required.");
-const source_path = program.args[0];
-const output_path = nodePath.join(process.cwd(), options.outDir);
-const output_src_path = nodePath.join(output_path, "src");
-//#endregion
-//#region src/configs/package.json.ts
-const dependenciesSchema = v.optional(v.record(v.string(), v.string()), () => {
-	return {};
-});
-const parsePackageJson = v.parser(v.pipe(v.string(), v.parseJson(), v.object({
-	version: v.string(),
-	dependencies: dependenciesSchema,
-	optionalDependencies: dependenciesSchema,
-	devDependencies: dependenciesSchema
-}), v.transform((value) => {
-	return {
-		version: value.version,
-		allDependencies: {
-			...value.dependencies,
-			...value.optionalDependencies,
-			...value.devDependencies
-		}
-	};
-}), v.check((value) => value.allDependencies["@hyperapi/core"] !== void 0, "Missing @hyperapi/core dependency")));
-const PACKAGE_JSON = parsePackageJson(await readFile(nodePath.join(import.meta.dirname, "../package.json"), "utf8"));
-/** Creates package.json for the client library. */
-async function createPackageJson() {
-	const data = parsePackageJson(await readFile(nodePath.join(process.cwd(), "package.json"), "utf8"));
-	await writeFile(nodePath.join(output_path, "package.json"), JSON.stringify({
-		name: options.name,
-		version: data.version,
-		type: "module",
-		main: "dist/main.mjs",
-		types: "dist/main.d.mts",
-		exports: { ".": {
-			types: {
-				import: "./dist/main.d.mts",
-				require: "./dist/main.d.cts"
-			},
-			import: "./dist/main.mjs",
-			require: "./dist/main.cjs"
-		} },
-		dependencies: {
-			"@hyperapi/core": data.allDependencies["@hyperapi/core"],
-			"type-fest": data.allDependencies["type-fest"] ?? PACKAGE_JSON.allDependencies["type-fest"],
-			valibot: data.allDependencies.valibot ?? PACKAGE_JSON.allDependencies.valibot
-		},
-		peerDependencies: { "@kirick/tasq": data.allDependencies["@kirick/tasq"] ?? PACKAGE_JSON.allDependencies["@kirick/tasq"] }
-	}, null, "	"), "utf8");
-}
-//#endregion
-//#region src/configs/tsconfig.json.ts
-/** Creates tsconfig.json for the client library. */
-async function createTsconfigJson() {
-	const content = await readFile(nodePath.join(import.meta.dirname, "..", "tsconfig.json"), "utf8");
-	const tsconfig = JSON.parse(content);
-	tsconfig.compilerOptions.isolatedDeclarations = false;
-	await writeFile(nodePath.join(output_path, "tsconfig.json"), JSON.stringify(tsconfig, null, "	"), "utf8");
-}
-//#endregion
-//#region src/exports.ts
-/**
-* Returns exports of a TypeScript file.
-* @param path - The path to the TypeScript file to scan.
-* @returns An array of objects representing the exports of the file.
-*/
-function scanExports(path) {
-	const program = ts.createProgram([path], {
-		target: ts.ScriptTarget.ESNext,
-		module: ts.ModuleKind.ESNext
-	});
-	const checker = program.getTypeChecker();
-	const sourceFile = program.getSourceFile(path);
-	if (!sourceFile) throw new Error("Source file not found");
-	const moduleSymbol = checker.getSymbolAtLocation(sourceFile);
-	if (!moduleSymbol) return {};
-	const exports = checker.getExportsOfModule(moduleSymbol);
-	return Object.fromEntries(exports.map((symbol) => {
-		const is_type = (symbol.getDeclarations() ?? []).some((decl) => ts.isTypeAliasDeclaration(decl) || ts.isInterfaceDeclaration(decl));
-		return [symbol.getName(), { is_type }];
-	}));
-}
-//#endregion
-//#region src/file.ts
-/**
-* Copies the template file to the target path.
-* @param path The target path to copy the template file to.
-*/
-async function copyTemplateFile(...path) {
-	await copyFile(nodePath.join(import.meta.dirname, "..", "template", ...path), nodePath.join(output_path, ...path));
-}
-//#endregion
 //#region src/main.ts
 /**
 *　Returns an array of key/values of the enumerable own properties of an object
@@ -170,10 +59,17 @@ for (const [index, route] of getRoutes(source_path).entries()) {
 }
 const overloads_lines = [];
 for (const [method, method_overloads_lines] of objectEntries(overloads)) if (method_overloads_lines.length > 0) overloads_lines.push(...method_overloads_lines, `${getFunctionName(method)}(route: string, args?: Record<string, unknown>): Promise<unknown> {`, `\treturn this.fetch('${method}', this.fillRoute(route, args), args);`, `}`, "");
+{
+	const types_path = nodePath.join(process.cwd(), source_path, "..", "hyper-api.d.ts");
+	if (fs.existsSync(types_path)) {
+		const import_path = nodePath.relative(output_src_path, types_path);
+		import_lines.push(`export type * from '${import_path}';`);
+	}
+}
 try {
-	rmdirSync(output_path, { recursive: true });
+	fs.rmSync(output_path, { recursive: true });
 } catch {}
-mkdirSync(output_src_path, { recursive: true });
+fs.mkdirSync(output_src_path, { recursive: true });
 await Promise.all([
 	copyTemplateFile(".npmignore"),
 	copyTemplateFile("src/client-base.ts"),
@@ -181,11 +77,11 @@ await Promise.all([
 	createPackageJson(),
 	createTsconfigJson()
 ]);
-let contents = readFileSync(`${import.meta.dirname}/../template/src/main.${options.type}.ts`, "utf8");
+let contents = fs.readFileSync(`${import.meta.dirname}/../template/src/main.${options.type}.ts`, "utf8");
 contents = contents.replace("// MARK: imports", import_lines.join("\n")).replace("// MARK: overloads", overloads_lines.join("\n	"));
 if (options.type === "tasq") contents = contents.replace("MARK: tasq-topic", options.tasq.topic);
 const output_entrypoint_path = nodePath.join(output_src_path, "main.ts");
-writeFileSync(output_entrypoint_path, contents);
+fs.writeFileSync(output_entrypoint_path, contents);
 await tsdown.build({
 	cwd: output_path,
 	entry: output_entrypoint_path,

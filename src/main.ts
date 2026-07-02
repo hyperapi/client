@@ -5,7 +5,7 @@
 // oxlint-disable no-await-in-loop
 // oxlint-disable unicorn/no-process-exit
 
-import { mkdirSync, readFileSync, rmdirSync, writeFileSync } from 'node:fs';
+import fs from 'node:fs';
 import nodePath from 'node:path';
 import { getRoutes, type HyperAPIMethod } from '@hyperapi/core/dev';
 import * as tsdown from 'tsdown';
@@ -128,13 +128,26 @@ for (const [method, method_overloads_lines] of objectEntries(overloads)) {
 	}
 }
 
+{
+	const types_path = nodePath.join(
+		process.cwd(),
+		source_path,
+		'..',
+		'hyper-api.d.ts',
+	);
+	if (fs.existsSync(types_path)) {
+		const import_path = nodePath.relative(output_src_path, types_path);
+		import_lines.push(`export type * from '${import_path}';`);
+	}
+}
+
 try {
-	rmdirSync(output_path, { recursive: true });
+	fs.rmSync(output_path, { recursive: true });
 } catch {
 	// ignore
 }
 
-mkdirSync(output_src_path, { recursive: true });
+fs.mkdirSync(output_src_path, { recursive: true });
 await Promise.all([
 	copyTemplateFile('.npmignore'),
 	copyTemplateFile('src/client-base.ts'),
@@ -143,7 +156,7 @@ await Promise.all([
 	createTsconfigJson(),
 ]);
 
-let contents = readFileSync(
+let contents = fs.readFileSync(
 	`${import.meta.dirname}/../template/src/main.${options.type}.ts`,
 	'utf8',
 );
@@ -157,7 +170,7 @@ if (options.type === 'tasq') {
 }
 
 const output_entrypoint_path = nodePath.join(output_src_path, 'main.ts');
-writeFileSync(output_entrypoint_path, contents);
+fs.writeFileSync(output_entrypoint_path, contents);
 
 await tsdown.build({
 	cwd: output_path,

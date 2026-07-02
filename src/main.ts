@@ -133,7 +133,7 @@ for (const [method, method_overloads_lines] of objectEntries(overloads)) {
 		process.cwd(),
 		source_path,
 		'..',
-		'hyper-api.d.ts',
+		'hyper-api.client.ts',
 	);
 	if (fs.existsSync(types_path)) {
 		const import_path = nodePath.relative(output_src_path, types_path);

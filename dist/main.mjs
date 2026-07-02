@@ -60,7 +60,7 @@ for (const [index, route] of getRoutes(source_path).entries()) {
 const overloads_lines = [];
 for (const [method, method_overloads_lines] of objectEntries(overloads)) if (method_overloads_lines.length > 0) overloads_lines.push(...method_overloads_lines, `${getFunctionName(method)}(route: string, args?: Record<string, unknown>): Promise<unknown> {`, `\treturn this.fetch('${method}', this.fillRoute(route, args), args);`, `}`, "");
 {
-	const types_path = nodePath.join(process.cwd(), source_path, "..", "hyper-api.d.ts");
+	const types_path = nodePath.join(process.cwd(), source_path, "..", "hyper-api.client.ts");
 	if (fs.existsSync(types_path)) {
 		const import_path = nodePath.relative(output_src_path, types_path);
 		import_lines.push(`export type * from '${import_path}';`);

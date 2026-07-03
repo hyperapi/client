@@ -23,7 +23,7 @@ function objectEntries(o) {
 * @returns The function name for the given HTTP method.
 */
 function getFunctionName(method) {
-	return method === "UNDEF" ? "query" : method.toLowerCase();
+	return method === "UNDEF" ? "send" : method.toLowerCase();
 }
 const import_lines = [];
 const route_defs = {

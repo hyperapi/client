@@ -32,7 +32,7 @@ function objectEntries<T extends Record<PropertyKey, unknown>>(
  * @returns The function name for the given HTTP method.
  */
 function getFunctionName(method: HyperAPIMethod): string {
-	return method === 'UNDEF' ? 'query' : method.toLowerCase();
+	return method === 'UNDEF' ? 'send' : method.toLowerCase();
 }
 
 const import_lines: string[] = [];

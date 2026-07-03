@@ -33,7 +33,7 @@ export default class Client extends ClientBase {
 		path: string,
 		args?: Record<string, unknown>,
 	): Promise<unknown> {
-		const url = new URL(path, this.base_url);
+		const url = new URL(this.base_url + path);
 		const headers = new Headers(this.headers);
 		let body;
 

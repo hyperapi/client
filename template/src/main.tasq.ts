@@ -5,7 +5,7 @@ import type { Tasq } from '@kirick/tasq';
 import type { Simplify } from 'type-fest';
 import * as v from 'valibot';
 import { ClientBase } from './client-base.js';
-import type { ExtractModuleResponse } from './types.js';
+import type { ExtractModuleResponse, WrapArgs } from './types.js';
 
 // MARK: imports
 
@@ -23,6 +23,8 @@ const parseResponse = v.parser(
 	]),
 );
 
+// MARK: route types
+
 // eslint-disable-next-line no-restricted-exports
 export default class Client extends ClientBase {
 	#tasq: Tasq;
@@ -33,7 +35,7 @@ export default class Client extends ClientBase {
 		this.#tasq = tasq;
 	}
 
-	// MARK: overloads
+	// MARK: class methods
 
 	protected async fetch(
 		_method: HyperAPIMethod,

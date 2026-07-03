@@ -4,7 +4,7 @@ import type { HyperAPIMethod } from '@hyperapi/core/dev';
 import type { Simplify } from 'type-fest';
 import * as v from 'valibot';
 import { ClientBase } from './client-base.js';
-import type { ExtractModuleResponse } from './types.js';
+import type { ExtractModuleResponse, WrapArgs } from './types.js';
 
 // MARK: imports
 
@@ -16,6 +16,8 @@ const parseErrorResponse = v.parser(
 	}),
 );
 
+// MARK: route types
+
 // eslint-disable-next-line no-restricted-exports
 export default class Client extends ClientBase {
 	headers = new Headers();
@@ -24,7 +26,7 @@ export default class Client extends ClientBase {
 		super();
 	}
 
-	// MARK: overloads
+	// MARK: class methods
 
 	protected async fetch(
 		method: HyperAPIMethod,

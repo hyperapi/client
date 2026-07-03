@@ -2,6 +2,8 @@ import Client from './build/src/main.js';
 
 const client = new Client('https://example.com/api');
 
+const _response0 = await client.get('/no-args');
+
 const _response1 = await client.get('/echo', { name: 'John' });
 
 const _response2 = await client.get('/users/:user_id', { user_id: 1 });

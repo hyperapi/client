@@ -26,14 +26,14 @@ function getFunctionName(method) {
 	return method === "UNDEF" ? "query" : method.toLowerCase();
 }
 const import_lines = [];
-const overloads = {
-	GET: [],
-	OPTIONS: [],
-	POST: [],
-	PUT: [],
-	PATCH: [],
-	DELETE: [],
-	UNDEF: []
+const route_defs = {
+	GET: {},
+	OPTIONS: {},
+	POST: {},
+	PUT: {},
+	PATCH: {},
+	DELETE: {},
+	UNDEF: {}
 };
 for (const [index, route] of getRoutes(source_path).entries()) {
 	const exports = scanExports(route.file_path);
@@ -50,15 +50,31 @@ for (const [index, route] of getRoutes(source_path).entries()) {
 		else imports.push(`default as module${index}`);
 		import_lines.push(`import type { ${imports.join(", ")} } from '${import_path}';`);
 	}
-	{
-		const type_params = has_response_type ? `<const A extends v.InferInput<typeof argsSchema${index}>>` : "";
-		const type_args = has_response_type ? "A" : `v.InferInput<typeof argsSchema${index}>`;
-		const type_return = has_response_type ? `ResponseType${index}<A>` : `ExtractModuleResponse<typeof module${index}>`;
-		overloads[route.method].push(`${getFunctionName(route.method)}${type_params}(route: '${route.route}', args: ${type_args}): Promise<Simplify<${type_return}>>;`);
-	}
+	route_defs[route.method][route.route] = {
+		args: `v.InferInput<typeof argsSchema${index}>`,
+		response: has_response_type ? `ResponseType${index}<A>` : `ExtractModuleResponse<typeof module${index}>`
+	};
 }
-const overloads_lines = [];
-for (const [method, method_overloads_lines] of objectEntries(overloads)) if (method_overloads_lines.length > 0) overloads_lines.push(...method_overloads_lines, `${getFunctionName(method)}(route: string, args?: Record<string, unknown>): Promise<unknown> {`, `\treturn this.fetch('${method}', this.fillRoute(route, args), args);`, `}`, "");
+/** Capitalizes the first letter of a string and makes the rest lowercase. */
+function capitalize(s) {
+	return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
+const route_types_lines = [];
+const class_methods_lines = [];
+for (const [method, def] of objectEntries(route_defs)) if (Object.keys(def).length > 0) {
+	let routes_union = "";
+	const route_args_lines = [];
+	const route_response_lines = [];
+	for (const [route, { args, response }] of objectEntries(def)) {
+		const route_quoted = JSON.stringify(route);
+		routes_union += `| ${route_quoted}`;
+		route_args_lines.push(`\t${route_quoted}: ${args}`);
+		route_response_lines.push(`\t${route_quoted}: ${response}`);
+	}
+	const type_prefix = `Routes${capitalize(method)}`;
+	route_types_lines.push(`type ${type_prefix}Args = {`, ...route_args_lines, `};`, `type ${type_prefix}Response<A extends ${type_prefix}Args[keyof ${type_prefix}Args]> = {`, ...route_response_lines, `};`);
+	class_methods_lines.push(`${getFunctionName(method)}<`, `\tconst R extends ${routes_union},`, `\tconst A extends ${type_prefix}Args[R],`, `\tconst Rs extends ${type_prefix}Response<A>[R]`, `>(route: R, ...args: WrapArgs<A>): Promise<Simplify<Rs>> {`, `\treturn this.fetch('${method}', this.fillRoute(route, args[0]), args[0]) as Promise<Simplify<Rs>>;`, `}`, "");
+}
 {
 	const types_path = nodePath.join(process.cwd(), source_path, "..", "hyper-api.client.ts");
 	if (fs.existsSync(types_path)) {
@@ -78,7 +94,7 @@ await Promise.all([
 	createTsconfigJson()
 ]);
 let contents = fs.readFileSync(`${import.meta.dirname}/../template/src/main.${options.type}.ts`, "utf8");
-contents = contents.replace("// MARK: imports", import_lines.join("\n")).replace("// MARK: overloads", overloads_lines.join("\n	"));
+contents = contents.replace("// MARK: imports", import_lines.join("\n")).replace("// MARK: route types", route_types_lines.join("\n")).replace("// MARK: class methods", class_methods_lines.join("\n	"));
 if (options.type === "tasq") contents = contents.replace("MARK: tasq-topic", options.tasq.topic);
 const output_entrypoint_path = nodePath.join(output_src_path, "main.ts");
 fs.writeFileSync(output_entrypoint_path, contents);

@@ -36,14 +36,26 @@ function getFunctionName(method: HyperAPIMethod): string {
 }
 
 const import_lines: string[] = [];
-const overloads: Record<HyperAPIMethod, string[]> = {
-	GET: [],
-	OPTIONS: [],
-	POST: [],
-	PUT: [],
-	PATCH: [],
-	DELETE: [],
-	UNDEF: [],
+// const overloads: Record<HyperAPIMethod, string[]> = {
+// 	GET: [],
+// 	OPTIONS: [],
+// 	POST: [],
+// 	PUT: [],
+// 	PATCH: [],
+// 	DELETE: [],
+// 	UNDEF: [],
+// };
+const route_defs: Record<
+	HyperAPIMethod,
+	Record<string, { args: string; response: string }>
+> = {
+	GET: {},
+	OPTIONS: {},
+	POST: {},
+	PUT: {},
+	PATCH: {},
+	DELETE: {},
+	UNDEF: {},
 };
 
 for (const [index, route] of getRoutes(source_path).entries()) {
@@ -95,33 +107,82 @@ for (const [index, route] of getRoutes(source_path).entries()) {
 		);
 	}
 
-	// overloads
-	{
-		const type_params = has_response_type
-			? `<const A extends v.InferInput<typeof argsSchema${index}>>`
-			: '';
-		const type_args = has_response_type
-			? 'A'
-			: `v.InferInput<typeof argsSchema${index}>`;
-		const type_return = has_response_type
-			? `ResponseType${index}<A>`
-			: `ExtractModuleResponse<typeof module${index}>`;
+	// // overloads
+	// {
+	// 	const type_params = has_response_type
+	// 		? `<const A extends v.InferInput<typeof argsSchema${index}>>`
+	// 		: '';
+	// 	const type_args = has_response_type
+	// 		? 'A'
+	// 		: `v.InferInput<typeof argsSchema${index}>`;
+	// 	const type_return = has_response_type
+	// 		? `ResponseType${index}<A>`
+	// 		: `ExtractModuleResponse<typeof module${index}>`;
 
-		overloads[route.method].push(
-			`${getFunctionName(route.method)}${type_params}(route: '${route.route}', args: ${type_args}): Promise<Simplify<${type_return}>>;`,
-		);
-	}
+	// 	overloads[route.method].push(
+	// 		`${getFunctionName(route.method)}${type_params}(route: '${route.route}', ...args: WrapArgs<${type_args}>): Promise<Simplify<${type_return}>>;`,
+	// 	);
+	// }
+
+	// route_defs
+	route_defs[route.method][route.route] = {
+		args: `v.InferInput<typeof argsSchema${index}>`,
+		response: has_response_type
+			? `ResponseType${index}<A>`
+			: `ExtractModuleResponse<typeof module${index}>`,
+	};
 
 	// console.log('----------');
 }
 
-const overloads_lines: string[] = [];
-for (const [method, method_overloads_lines] of objectEntries(overloads)) {
-	if (method_overloads_lines.length > 0) {
-		overloads_lines.push(
-			...method_overloads_lines,
-			`${getFunctionName(method)}(route: string, args?: Record<string, unknown>): Promise<unknown> {`,
-			`\treturn this.fetch('${method}', this.fillRoute(route, args), args);`,
+/** Capitalizes the first letter of a string and makes the rest lowercase. */
+function capitalize(s: string): string {
+	return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
+
+const route_types_lines: string[] = [];
+const class_methods_lines: string[] = [];
+// for (const [method, method_overloads_lines] of objectEntries(overloads)) {
+// 	if (method_overloads_lines.length > 0) {
+// 		class_methods_lines.push(
+// 			...method_overloads_lines,
+// 			`${getFunctionName(method)}(route: string, args?: Record<string, unknown>): Promise<unknown> {`,
+// 			`\treturn this.fetch('${method}', this.fillRoute(route, args), args);`,
+// 			`}`,
+// 			'',
+// 		);
+// 	}
+// }
+for (const [method, def] of objectEntries(route_defs)) {
+	const routes = Object.keys(def);
+	if (routes.length > 0) {
+		let routes_union = '';
+		const route_args_lines: string[] = [];
+		const route_response_lines: string[] = [];
+		for (const [route, { args, response }] of objectEntries(def)) {
+			const route_quoted = JSON.stringify(route);
+			routes_union += `| ${route_quoted}`;
+			route_args_lines.push(`\t${route_quoted}: ${args}`);
+			route_response_lines.push(`\t${route_quoted}: ${response}`);
+		}
+
+		const type_prefix = `Routes${capitalize(method)}`;
+		route_types_lines.push(
+			`type ${type_prefix}Args = {`,
+			...route_args_lines,
+			`};`,
+			`type ${type_prefix}Response<A extends ${type_prefix}Args[keyof ${type_prefix}Args]> = {`,
+			...route_response_lines,
+			`};`,
+		);
+
+		class_methods_lines.push(
+			`${getFunctionName(method)}<`,
+			`\tconst R extends ${routes_union},`,
+			`\tconst A extends ${type_prefix}Args[R],`,
+			`\tconst Rs extends ${type_prefix}Response<A>[R]`,
+			`>(route: R, ...args: WrapArgs<A>): Promise<Simplify<Rs>> {`,
+			`\treturn this.fetch('${method}', this.fillRoute(route, args[0]), args[0]) as Promise<Simplify<Rs>>;`,
 			`}`,
 			'',
 		);
@@ -163,7 +224,8 @@ let contents = fs.readFileSync(
 
 contents = contents
 	.replace('// MARK: imports', import_lines.join('\n'))
-	.replace('// MARK: overloads', overloads_lines.join('\n\t'));
+	.replace('// MARK: route types', route_types_lines.join('\n'))
+	.replace('// MARK: class methods', class_methods_lines.join('\n\t'));
 
 if (options.type === 'tasq') {
 	contents = contents.replace('MARK: tasq-topic', options.tasq.topic);

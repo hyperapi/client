@@ -13,7 +13,7 @@
 	},
 	"dependencies": {
 		"@commander-js/extra-typings": "14.0.0",
-		"@hyperapi/core": "github:hyperapi/core#7df8a93e13aef72083aa5f92f563b1b89477a3a6",
+		"@hyperapi/core": "github:hyperapi/core#7c1fe4caf68b127a7bfa4f0e41d2e685f9c7cc16",
 		"typescript": "6.0.2"
 	},
 	"optionalDependencies": {

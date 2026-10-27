@@ -1,6 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import nodePath from 'node:path';
 import * as v from 'valibot';
+import { PACKAGE_ROOT } from '../file.js';
 import { options, output_path } from '../state.js';
 
 const dependenciesSchema = v.optional(v.record(v.string(), v.string()), () => {
@@ -33,11 +34,9 @@ const parsePackageJson = v.parser(
 	),
 );
 
+// Our own package.json, for dependency versions to fall back on.
 const PACKAGE_JSON = parsePackageJson(
-	await readFile(
-		nodePath.join(import.meta.dirname, '../../package.json'),
-		'utf8',
-	),
+	await readFile(nodePath.join(PACKAGE_ROOT, 'package.json'), 'utf8'),
 );
 
 /** Creates package.json for the client library. */
@@ -58,6 +57,7 @@ export async function createPackageJson(): Promise<void> {
 				type: 'module',
 				main: 'dist/main.mjs',
 				types: 'dist/main.d.mts',
+				files: ['dist/'],
 				exports: {
 					'.': {
 						types: {
@@ -76,6 +76,13 @@ export async function createPackageJson(): Promise<void> {
 					valibot:
 						data.allDependencies.valibot
 						?? PACKAGE_JSON.allDependencies.valibot,
+				},
+				// Only what building the client needs: its platform types come
+				// from the DOM lib, so there is no `@types/*` to install.
+				devDependencies: {
+					typescript:
+						data.allDependencies.typescript
+						?? PACKAGE_JSON.allDependencies.typescript,
 				},
 				peerDependencies: {
 					'@kirick/tasq':

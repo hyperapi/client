@@ -1,13 +1,6 @@
-import { configCommon } from '@kirick/lint/eslint/common';
-import { configNode } from '@kirick/lint/eslint/node';
-import { configOxlint } from '@kirick/lint/eslint/oxlint';
-import { defineConfig } from 'eslint/config';
+import { eslint } from '@kirick/lint/eslint';
+import { defineConfig, globalIgnores } from 'eslint/config';
 
-export default defineConfig([
-	{
-		ignores: ['dist/**', 'test/build/**', 'test/client.ts'],
-	},
-	...configCommon,
-	...configNode,
-	...configOxlint,
-]);
+// test/*/build/ is generated: `bun run test:types` type-checks it, linting it
+// would only make the lint step depend on whether it has been generated yet.
+export default defineConfig(eslint, globalIgnores(['test/*/build/']));

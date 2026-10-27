@@ -6,15 +6,19 @@
 		"access": "public"
 	},
 	"type": "module",
+	"files": [
+		"dist/",
+		"template/"
+	],
 	"bin": "dist/main.mjs",
 	"sideEffects": false,
 	"engines": {
-		"node": ">=22.16"
+		"node": "^22.16 || >=24"
 	},
 	"dependencies": {
 		"@commander-js/extra-typings": "14.0.0",
-		"@hyperapi/core": "github:hyperapi/core#7c1fe4caf68b127a7bfa4f0e41d2e685f9c7cc16",
-		"typescript": "6.0.2"
+		"@hyperapi/core": "github:hyperapi/core#2247920e37eda7d096dbceda30e8eb324e57ae00",
+		"typescript": "6.0.3"
 	},
 	"optionalDependencies": {
 		"@kirick/tasq": "^0.3.0",
@@ -23,23 +27,27 @@
 		"valibot": "1.4.0"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.4.10",
-		"@kirick/lint": "0.3.3",
+		"@biomejs/biome": "2.5.4",
+		"@kirick/lint": "0.4.2",
 		"@types/node": "24.12.3",
-		"eslint": "10.2.0",
-		"oxlint": "1.58.0",
+		"eslint": "10.7.0",
+		"oxlint": "1.74.0",
 		"publint": "0.3.21",
-		"unplugin-unused": "0.5.4"
+		"unplugin-unused": "0.5.4",
+		"vitest": "5.0.5"
 	},
 	"_devpack": {
 		"@hyperapi/core": "../core"
 	},
 	"scripts": {
-		"build": "tsdown src/main.ts --clean --unbundle --dts --format esm --unused --publint",
-		"check": "bun run lint && bun run build && bun run test",
-		"lint": "biome format && oxlint && eslint . && tsc",
-		"test": "bun run src/main.ts --name=@hyper-api/test-client --type=http -d test/build test/src/hyper-api",
-		"test:dist": "bun run build && node dist/main.mjs --name=@hyper-api/test-client --type=http -d test/build test/src/hyper-api"
+		"build": "tsdown src/main.ts --clean --no-dts --format esm --unused --publint",
+		"check": "bun run lint && bun run test:build && bun run test && bun run build",
+		"test": "vitest run && bun run test:types",
+		"test:build": "bun run test:build:http && bun run test:build:tasq",
+		"test:build:http": "bun run src/main.ts --name=@hyper-api/test-client-http --type=http -d test/http/build test/http/src/hyper-api",
+		"test:build:tasq": "bun run src/main.ts --name=@hyper-api/test-client-tasq --type=tasq --topic=test -d test/tasq/build test/tasq/src/hyper-api",
+		"test:dist": "bun run build && node dist/main.mjs --name=@hyper-api/test-client-http --type=http -d test/http/build test/http/src/hyper-api",
+		"test:types": "tsc -p test/http/build/tsconfig.json && tsc -p test/tasq/build/tsconfig.json && tsc -p test/http/tsconfig.json && tsc -p test/tasq/tsconfig.json"
 	},
 	"repository": {
 		"type": "git",

@@ -62,5 +62,8 @@ if (!program.args[0]) {
 
 export const source_path = program.args[0];
 
-export const output_path = nodePath.join(process.cwd(), options.outDir);
+// `resolve`, not `join`: an absolute --out-dir must replace the cwd rather than
+// be appended to it. This directory is deleted before writing, so getting it
+// wrong is not harmless.
+export const output_path = nodePath.resolve(process.cwd(), options.outDir);
 export const output_src_path = nodePath.join(output_path, 'src');

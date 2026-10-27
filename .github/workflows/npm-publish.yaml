@@ -82,8 +82,14 @@ jobs:
       - name: Lint code
         run: bun run lint
 
+      - name: Build test client
+        run: bun run test:build
+
       - name: Test code
         run: bun run test
+
+      - name: Build code
+        run: bun run build
 
   publish:
     needs:

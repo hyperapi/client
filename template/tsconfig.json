@@ -1,0 +1,24 @@
+{
+	"compilerOptions": {
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"target": "es2025",
+		"moduleDetection": "force",
+		"isolatedModules": true,
+		"verbatimModuleSyntax": true,
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
+		"module": "preserve",
+		"noEmit": true,
+		"declaration": true,
+		"isolatedDeclarations": false,
+		// The client only ever touches web APIs: `fetch`, `Headers`, `URL`. It
+		// gets the DOM lib rather than the generator's own Node types, so the
+		// published .d.mts carries no `@types/node` reference and stays usable
+		// in a browser.
+		"lib": ["es2022", "dom"],
+		"types": []
+	},
+	"include": ["src/"]
+}

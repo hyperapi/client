@@ -1,24 +1,20 @@
 #!/usr/bin/env node
 
-// oxlint-disable max-lines-per-function
-// oxlint-disable max-statements
-// oxlint-disable no-await-in-loop
-// oxlint-disable unicorn/no-process-exit
+// oxlint-disable max-lines-per-function, max-statements, no-await-in-loop, unicorn/no-process-exit
 
 import fs from 'node:fs';
 import nodePath from 'node:path';
 import { getRoutes, type HyperAPIMethod } from '@hyperapi/core/dev';
 import * as tsdown from 'tsdown';
 import { createPackageJson } from './configs/package.json.js';
-import { createTsconfigJson } from './configs/tsconfig.json.js';
 import { scanExports } from './exports.js';
-import { copyTemplateFile } from './file.js';
+import { copyTemplateFile, PACKAGE_ROOT } from './file.js';
 import { options, output_path, output_src_path, source_path } from './state.js';
 
 /**
  *　Returns an array of key/values of the enumerable own properties of an object
  * @param o Object that contains the properties and methods. This can be an object that you created or an existing Document Object Model (DOM) object.
- * @returns
+ * @returns The key/value pairs of the object, typed by its own keys.
  */
 function objectEntries<T extends Record<PropertyKey, unknown>>(
 	o: T,
@@ -36,15 +32,6 @@ function getFunctionName(method: HyperAPIMethod): string {
 }
 
 const import_lines: string[] = [];
-// const overloads: Record<HyperAPIMethod, string[]> = {
-// 	GET: [],
-// 	OPTIONS: [],
-// 	POST: [],
-// 	PUT: [],
-// 	PATCH: [],
-// 	DELETE: [],
-// 	UNDEF: [],
-// };
 const route_defs: Record<
 	HyperAPIMethod,
 	Record<string, { args: string; response: string }>
@@ -67,7 +54,9 @@ for (const [index, route] of getRoutes(source_path).entries()) {
 
 	if (exports.argsSchema === undefined) {
 		throw new Error(`No exported argsSchema found in ${route.file_path}.`);
-	} else if (exports.argsSchema.is_type) {
+	}
+
+	if (exports.argsSchema.is_type) {
 		throw new Error(
 			`Exported argsSchema is not a value in ${route.file_path}.`,
 		);
@@ -75,7 +64,9 @@ for (const [index, route] of getRoutes(source_path).entries()) {
 
 	if (exports.default === undefined) {
 		throw new Error(`No default export found in ${route.file_path}.`);
-	} else if (exports.default.is_type) {
+	}
+
+	if (exports.default.is_type) {
 		throw new Error(`Exported default is not a value in ${route.file_path}.`);
 	}
 
@@ -91,7 +82,7 @@ for (const [index, route] of getRoutes(source_path).entries()) {
 	{
 		const import_path = nodePath.relative(
 			output_src_path,
-			nodePath.join(process.cwd(), route.file_path),
+			nodePath.resolve(process.cwd(), route.file_path),
 		);
 		// console.log('import path =', import_path);
 
@@ -106,23 +97,6 @@ for (const [index, route] of getRoutes(source_path).entries()) {
 			`import type { ${imports.join(', ')} } from '${import_path}';`,
 		);
 	}
-
-	// // overloads
-	// {
-	// 	const type_params = has_response_type
-	// 		? `<const A extends v.InferInput<typeof argsSchema${index}>>`
-	// 		: '';
-	// 	const type_args = has_response_type
-	// 		? 'A'
-	// 		: `v.InferInput<typeof argsSchema${index}>`;
-	// 	const type_return = has_response_type
-	// 		? `ResponseType${index}<A>`
-	// 		: `ExtractModuleResponse<typeof module${index}>`;
-
-	// 	overloads[route.method].push(
-	// 		`${getFunctionName(route.method)}${type_params}(route: '${route.route}', ...args: WrapArgs<${type_args}>): Promise<Simplify<${type_return}>>;`,
-	// 	);
-	// }
 
 	// route_defs
 	route_defs[route.method][route.route] = {
@@ -142,17 +116,6 @@ function capitalize(s: string): string {
 
 const route_types_lines: string[] = [];
 const class_methods_lines: string[] = [];
-// for (const [method, method_overloads_lines] of objectEntries(overloads)) {
-// 	if (method_overloads_lines.length > 0) {
-// 		class_methods_lines.push(
-// 			...method_overloads_lines,
-// 			`${getFunctionName(method)}(route: string, args?: Record<string, unknown>): Promise<unknown> {`,
-// 			`\treturn this.fetch('${method}', this.fillRoute(route, args), args);`,
-// 			`}`,
-// 			'',
-// 		);
-// 	}
-// }
 for (const [method, def] of objectEntries(route_defs)) {
 	const routes = Object.keys(def);
 	if (routes.length > 0) {
@@ -190,7 +153,9 @@ for (const [method, def] of objectEntries(route_defs)) {
 }
 
 {
-	const types_path = nodePath.join(
+	// Conventional name, sitting beside the API method directory: types the
+	// generated client should re-export go in src/hyper-api.client.ts.
+	const types_path = nodePath.resolve(
 		process.cwd(),
 		source_path,
 		'..',
@@ -210,25 +175,27 @@ try {
 
 fs.mkdirSync(output_src_path, { recursive: true });
 await Promise.all([
-	copyTemplateFile('.npmignore'),
 	copyTemplateFile('src/client-base.ts'),
 	copyTemplateFile('src/types.ts'),
+	copyTemplateFile('tsconfig.json'),
 	createPackageJson(),
-	createTsconfigJson(),
 ]);
 
 let contents = fs.readFileSync(
-	`${import.meta.dirname}/../template/src/main.${options.type}.ts`,
+	nodePath.join(PACKAGE_ROOT, 'template/src', `main.${options.type}.ts`),
 	'utf8',
 );
 
+// The replacements are passed as functions: generated code may contain `$&`
+// and friends, which `String#replace` would otherwise expand.
 contents = contents
-	.replace('// MARK: imports', import_lines.join('\n'))
-	.replace('// MARK: route types', route_types_lines.join('\n'))
-	.replace('// MARK: class methods', class_methods_lines.join('\n\t'));
+	.replace('// MARK: imports', () => import_lines.join('\n'))
+	.replace('// MARK: route types', () => route_types_lines.join('\n'))
+	.replace('// MARK: class methods', () => class_methods_lines.join('\n\t'));
 
 if (options.type === 'tasq') {
-	contents = contents.replace('MARK: tasq-topic', options.tasq.topic);
+	const { topic } = options.tasq;
+	contents = contents.replace('MARK: tasq-topic', () => topic);
 }
 
 const output_entrypoint_path = nodePath.join(output_src_path, 'main.ts');

@@ -1,20 +1,9 @@
 {
+	"extends": "./node_modules/@kirick/lint/configs/tsconfig.base.json",
 	"compilerOptions": {
-		"esModuleInterop": true,
-		"skipLibCheck": true,
-		"target": "es2022",
-		"moduleDetection": "force",
-		"isolatedModules": true,
-		"verbatimModuleSyntax": true,
-		"strict": true,
-		"noUncheckedIndexedAccess": true,
-		"noImplicitOverride": true,
-		"module": "preserve",
-		"noEmit": true,
 		"lib": ["es2022"],
-		"types": ["node"],
-		"declaration": true,
-		"isolatedDeclarations": false
+		"isolatedDeclarations": false,
+		"types": ["node"]
 	},
 	"include": ["src/"],
 	"exclude": ["**/*.test.ts"]

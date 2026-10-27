@@ -6,7 +6,7 @@
       "name": "@hyperapi/client",
       "dependencies": {
         "@commander-js/extra-typings": "14.0.0",
-        "@hyperapi/core": "github:hyperapi/core#eba95084696a178b4bbbdbc421af775d74d68f09",
+        "@hyperapi/core": "github:hyperapi/core#7e59428a9a8954d81467ec4f2eaf7ce32a52daea",
         "typescript": "6.0.3",
       },
       "devDependencies": {
@@ -106,7 +106,7 @@
 
     "@humanwhocodes/retry": ["@humanwhocodes/retry@0.4.3", "", {}, "sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ=="],
 
-    "@hyperapi/core": ["@hyperapi/core@github:hyperapi/core#eba9508", { "dependencies": { "itty-router": "5.0.24", "neoevents": "0.3.0", "type-fest": "5.7.0" } }, "hyperapi-core-eba9508", "sha512-tzOdpVn9z1YXytJNTEVfI9e+MZiiIk3t7IRX2JFrus40T0ptQwRyOgvthB/lS8KKbUm7OpLqhDSmeLfEqSwAQQ=="],
+    "@hyperapi/core": ["@hyperapi/core@github:hyperapi/core#7e59428", { "dependencies": { "itty-router": "5.0.24", "neoevents": "0.3.0", "type-fest": "5.7.0" } }, "hyperapi-core-7e59428", "sha512-14s2a3wslprSY8LbVmf87dJA4/IK/RiIrecnovaQwioPd2gV5f6pxrqT11bv3qhaMjjPVVLhDQdPkAPmYFukvA=="],
 
     "@jridgewell/gen-mapping": ["@jridgewell/gen-mapping@0.3.13", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.0", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA=="],
 

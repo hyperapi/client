@@ -148,6 +148,7 @@ const route_defs = {
 	PUT: {},
 	PATCH: {},
 	DELETE: {},
+	QUERY: {},
 	UNDEF: {}
 };
 for (const [index, route] of getRoutes(source_path).entries()) {

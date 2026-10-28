@@ -6,7 +6,7 @@
       "name": "@hyperapi/client",
       "dependencies": {
         "@commander-js/extra-typings": "14.0.0",
-        "@hyperapi/core": "github:hyperapi/core#7e59428a9a8954d81467ec4f2eaf7ce32a52daea",
+        "@hyperapi/core": "github:hyperapi/core#daac5df164cba7ce5f2638afef5dc13659d4f1c0",
         "typescript": "6.0.3",
       },
       "devDependencies": {
@@ -106,7 +106,7 @@
 
     "@humanwhocodes/retry": ["@humanwhocodes/retry@0.4.3", "", {}, "sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ=="],
 
-    "@hyperapi/core": ["@hyperapi/core@github:hyperapi/core#7e59428", { "dependencies": { "itty-router": "5.0.24", "neoevents": "0.3.0", "type-fest": "5.7.0" } }, "hyperapi-core-7e59428", "sha512-14s2a3wslprSY8LbVmf87dJA4/IK/RiIrecnovaQwioPd2gV5f6pxrqT11bv3qhaMjjPVVLhDQdPkAPmYFukvA=="],
+    "@hyperapi/core": ["@hyperapi/core@github:hyperapi/core#daac5df", { "dependencies": { "itty-router": "5.0.24", "neoevents": "0.3.1", "type-fest": "5.7.0" } }, "hyperapi-core-daac5df", "sha512-5ap6Tnwh9z+lQqsPILmg/kRyY9c7xs0WwzCWE8SDzRSbHRC8HcnXMIBvgXliXloWXCF9UgM8GYCw0Reg9YG9Ow=="],
 
     "@jridgewell/gen-mapping": ["@jridgewell/gen-mapping@0.3.13", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.0", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA=="],
 
@@ -512,7 +512,7 @@
 
     "natural-compare": ["natural-compare@1.4.0", "", {}, "sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw=="],
 
-    "neoevents": ["neoevents@0.3.0", "", {}, "sha512-et9vcJ8ElRUbgxeJXAw++1noXVY302fxRvwEoIDll9KiQAeySjTQBdLtATvtE17MgbitLjjixI5UcFOS92EI+w=="],
+    "neoevents": ["neoevents@0.3.1", "", {}, "sha512-DgXN+njGY1kSFp3zLUb8JzkrZt6SjmzK1UnLf2i/sbMYXAiiZMJk+RhQboir8Q4r6eMIOzdcGr/c8nDk+lPrFw=="],
 
     "node-gyp-build-optional-packages": ["node-gyp-build-optional-packages@5.1.1", "", { "dependencies": { "detect-libc": "^2.0.1" }, "bin": { "node-gyp-build-optional-packages": "bin.js", "node-gyp-build-optional-packages-test": "build-test.js", "node-gyp-build-optional-packages-optional": "optional.js" } }, "sha512-+P72GAjVAbTxjjwUmwjVrqrdZROD4nf8KgpBoDxqXXTiYZZt/ud60dE5yvCSr9lRO8e8yv6kgJIC0K0PfZFVQw=="],
 

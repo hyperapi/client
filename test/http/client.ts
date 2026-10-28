@@ -42,6 +42,10 @@ expectTypeOf(response5).toEqualTypeOf<{ items: Item[]; user: ApiUserShort }>();
 const response6 = await client.post('/echo', { name: 'John' });
 expectTypeOf(response6).toEqualTypeOf<{ ok: boolean }>();
 
+// QUERY gets its own method off the same route, like any other verb.
+const response11 = await client.query('/echo', { name: 'John' });
+expectTypeOf(response11).toEqualTypeOf<{ queried: boolean }>();
+
 // @ts-expect-error -- route does not exist
 const _response7 = await client.get('/hello', { name: 'John' });
 

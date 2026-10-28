@@ -42,6 +42,7 @@ const route_defs: Record<
 	PUT: {},
 	PATCH: {},
 	DELETE: {},
+	QUERY: {},
 	UNDEF: {},
 };
 

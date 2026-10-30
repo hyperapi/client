@@ -104,6 +104,8 @@ import Client, { type ApiUser } from '@my-org/api-client';
 
 It is pulled in with `export type *`, so only types pass through. Values exported from it are ignored.
 
+This file controls *naming*, not inclusion. The types a `ResponseType` refers to are inlined into the built declarations either way — listing them here is what lets consumers import them by name instead of reaching for them through a response type.
+
 ## Transports
 
 ### HTTP (`--type=http`)

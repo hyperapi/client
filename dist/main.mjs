@@ -123,6 +123,108 @@ function scanExports(path) {
 	}));
 }
 //#endregion
+//#region src/response-type.ts
+/**
+* Records a symbol without descending into it: once a type can be named, the
+* name is the reference. Descending instead is what turns a `Date` field into
+* its eighty method signatures.
+* @param checker - The type checker the symbol came from.
+* @param symbol - The symbol to describe.
+* @returns -
+*/
+function describe(checker, symbol) {
+	const declaration = symbol?.getDeclarations()?.[0];
+	if (!symbol || !declaration) return;
+	const file = declaration.getSourceFile().fileName;
+	const module_symbol = checker.getSymbolAtLocation(declaration.getSourceFile());
+	return {
+		name: symbol.getName(),
+		file,
+		is_exported: module_symbol === void 0 || checker.getExportsOfModule(module_symbol).some((exported) => exported.getName() === symbol.getName()),
+		is_ambient: file.includes("node_modules") || /\blib\.[a-z0-9.]*d\.ts$/u.test(file)
+	};
+}
+/**
+* Collects every named type a type refers to.
+* @param checker - The type checker the type came from.
+* @param type - The type to walk.
+* @param found - Accumulator, keyed by name.
+* @param seen - Types already walked, to survive recursive types.
+*/
+function collect(checker, type, found, seen) {
+	if (seen.has(type)) return;
+	seen.add(type);
+	/**
+	* @param symbol - The symbol to record.
+	* @returns Whether it was nameable, and so whether to stop descending.
+	*/
+	function wasRecorded(symbol) {
+		const reference = describe(checker, symbol);
+		if (!reference || reference.name.startsWith("__")) return false;
+		found.set(reference.name, reference);
+		return true;
+	}
+	if (wasRecorded(type.aliasSymbol)) {
+		for (const argument of type.aliasTypeArguments ?? []) collect(checker, argument, found, seen);
+		return;
+	}
+	const reference = type;
+	if (reference.target && reference.target !== type) {
+		wasRecorded(reference.target.aliasSymbol ?? reference.target.symbol);
+		for (const argument of checker.getTypeArguments(reference)) collect(checker, argument, found, seen);
+		return;
+	}
+	if (type.isUnionOrIntersection()) {
+		for (const member of type.types) collect(checker, member, found, seen);
+		return;
+	}
+	if ((type.flags & ts.TypeFlags.Object) !== 0) {
+		if (wasRecorded(type.symbol)) return;
+		for (const property of checker.getPropertiesOfType(type)) {
+			const declaration = property.getDeclarations()?.[0];
+			if (declaration) collect(checker, checker.getTypeOfSymbolAtLocation(property, declaration), found, seen);
+		}
+	}
+}
+/**
+* Resolves the response type of a route module's default export.
+* @param path - Path to the route module.
+* @returns The response as text plus the named types it cites, or `undefined`
+* when the module's shape is not what this expects.
+*/
+function resolveResponse(path) {
+	const program = ts.createProgram([path], {
+		target: ts.ScriptTarget.ESNext,
+		module: ts.ModuleKind.ESNext,
+		moduleResolution: ts.ModuleResolutionKind.Bundler,
+		strict: true
+	});
+	const checker = program.getTypeChecker();
+	const source_file = program.getSourceFile(path);
+	const module_symbol = source_file && checker.getSymbolAtLocation(source_file);
+	if (!source_file || !module_symbol) return;
+	const default_export = checker.getExportsOfModule(module_symbol).find((symbol) => symbol.getName() === "default");
+	const declaration = default_export?.getDeclarations()?.[0];
+	if (!default_export || !declaration) return;
+	const module_type = checker.getTypeOfSymbolAtLocation(default_export, declaration);
+	const extra = checker.getTypeArguments(module_type)[1];
+	const response_symbol = extra && checker.getPropertyOfType(extra, "response");
+	const response_declaration = response_symbol?.getDeclarations()?.[0];
+	if (!response_symbol) return;
+	const response = response_declaration ? checker.getTypeOfSymbolAtLocation(response_symbol, response_declaration) : checker.getTypeOfSymbolAtLocation(response_symbol, declaration);
+	const found = /* @__PURE__ */ new Map();
+	collect(checker, response, found, /* @__PURE__ */ new Set());
+	return {
+		text: checker.typeToString(response, void 0, ts.TypeFormatFlags.NoTruncation),
+		references: Array.from(found.values(), (reference) => {
+			return {
+				...reference,
+				file: nodePath.resolve(reference.file)
+			};
+		})
+	};
+}
+//#endregion
 //#region src/main.ts
 /**
 *　Returns an array of key/values of the enumerable own properties of an object
@@ -141,6 +243,24 @@ function getFunctionName(method) {
 	return method === "UNDEF" ? "send" : method.toLowerCase();
 }
 const import_lines = [];
+/** Type names already imported, so two routes citing `ApiUser` import it once. */
+const imported_types = /* @__PURE__ */ new Map();
+const lint_warnings = [];
+const source_dir = nodePath.resolve(process.cwd(), source_path);
+/**
+* Decides whether a resolved response can be written out as-is: every type it
+* names must be reachable from the generated file.
+* @param references - The named types the response cites.
+* @returns -
+*/
+function canInlineResponse(references) {
+	return references.every((reference) => {
+		if (reference.is_ambient) return true;
+		if (!reference.is_exported) return false;
+		const claimed = imported_types.get(reference.name);
+		return claimed === void 0 || claimed === reference.file;
+	});
+}
 const route_defs = {
 	GET: {},
 	OPTIONS: {},
@@ -163,14 +283,23 @@ for (const [index, route] of getRoutes(source_path).entries()) {
 		const import_path = nodePath.relative(output_src_path, nodePath.resolve(process.cwd(), route.file_path));
 		const imports = [`argsSchema as argsSchema${index}`];
 		if (has_response_type) imports.push(`ResponseType as ResponseType${index}`);
-		else imports.push(`default as module${index}`);
+		const resolved = resolveResponse(route.file_path);
+		for (const reference of resolved?.references ?? []) if (!reference.is_ambient && !reference.file.startsWith(source_dir)) lint_warnings.push(`${route.file_path}: response type references \`${reference.name}\`, declared outside the API directory in ${nodePath.relative(process.cwd(), reference.file)}. Its whole declaration is published with the client.`);
+		const can_inline = !has_response_type && resolved !== void 0 && canInlineResponse(resolved.references);
+		if (!can_inline && !has_response_type) imports.push(`default as module${index}`);
 		import_lines.push(`import type { ${imports.join(", ")} } from '${import_path}';`);
+		if (can_inline) for (const reference of resolved.references) {
+			if (reference.is_ambient || imported_types.has(reference.name)) continue;
+			imported_types.set(reference.name, reference.file);
+			import_lines.push(`import type { ${reference.name} } from '${nodePath.relative(output_src_path, reference.file)}';`);
+		}
+		route_defs[route.method][route.route] = {
+			args: `v.InferInput<typeof argsSchema${index}>`,
+			response: has_response_type ? `ResponseType${index}<A>` : can_inline ? resolved.text : `ExtractModuleResponse<typeof module${index}>`
+		};
 	}
-	route_defs[route.method][route.route] = {
-		args: `v.InferInput<typeof argsSchema${index}>`,
-		response: has_response_type ? `ResponseType${index}<A>` : `ExtractModuleResponse<typeof module${index}>`
-	};
 }
+if (lint_warnings.length > 0) for (const warning of lint_warnings) console.warn(`warning: ${warning}`);
 /** Capitalizes the first letter of a string and makes the rest lowercase. */
 function capitalize(s) {
 	return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();

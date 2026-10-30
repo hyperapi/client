@@ -3,3 +3,5 @@
 *.env
 node_modules
 test/*/build
+*.tar.gz
+*.tgz

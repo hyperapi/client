@@ -9,6 +9,7 @@ import * as tsdown from 'tsdown';
 import { createPackageJson } from './configs/package.json.js';
 import { scanExports } from './exports.js';
 import { copyTemplateFile, PACKAGE_ROOT } from './file.js';
+import { resolveResponse, type TypeReference } from './response-type.js';
 import { options, output_path, output_src_path, source_path } from './state.js';
 
 /**
@@ -32,6 +33,32 @@ function getFunctionName(method: HyperAPIMethod): string {
 }
 
 const import_lines: string[] = [];
+/** Type names already imported, so two routes citing `ApiUser` import it once. */
+const imported_types = new Map<string, string>();
+const lint_warnings: string[] = [];
+const source_dir = nodePath.resolve(process.cwd(), source_path);
+
+/**
+ * Decides whether a resolved response can be written out as-is: every type it
+ * names must be reachable from the generated file.
+ * @param references - The named types the response cites.
+ * @returns -
+ */
+function canInlineResponse(references: TypeReference[]): boolean {
+	return references.every((reference) => {
+		if (reference.is_ambient) {
+			return true;
+		}
+
+		if (!reference.is_exported) {
+			return false;
+		}
+
+		const claimed = imported_types.get(reference.name);
+		return claimed === undefined || claimed === reference.file;
+	});
+}
+
 const route_defs: Record<
 	HyperAPIMethod,
 	Record<string, { args: string; response: string }>
@@ -90,24 +117,66 @@ for (const [index, route] of getRoutes(source_path).entries()) {
 		const imports = [`argsSchema as argsSchema${index}`];
 		if (has_response_type) {
 			imports.push(`ResponseType as ResponseType${index}`);
-		} else {
+		}
+
+		// Resolving the response here keeps `HyperAPIModule` and everything the
+		// middleware chain accumulated out of the generated types.
+		// Resolved for every route: even where `ResponseType` is what gets
+		// published, the action's own return type is what the lint can see.
+		const resolved = resolveResponse(route.file_path);
+
+		for (const reference of resolved?.references ?? []) {
+			if (!reference.is_ambient && !reference.file.startsWith(source_dir)) {
+				lint_warnings.push(
+					`${route.file_path}: response type references \`${reference.name}\`, declared outside the API directory in ${nodePath.relative(process.cwd(), reference.file)}. Its whole declaration is published with the client.`,
+				);
+			}
+		}
+
+		const can_inline =
+			!has_response_type
+			&& resolved !== undefined
+			&& canInlineResponse(resolved.references);
+		if (!can_inline && !has_response_type) {
 			imports.push(`default as module${index}`);
 		}
 
 		import_lines.push(
 			`import type { ${imports.join(', ')} } from '${import_path}';`,
 		);
+
+		if (can_inline) {
+			for (const reference of resolved.references) {
+				if (reference.is_ambient || imported_types.has(reference.name)) {
+					continue;
+				}
+
+				imported_types.set(reference.name, reference.file);
+				import_lines.push(
+					`import type { ${reference.name} } from '${nodePath.relative(output_src_path, reference.file)}';`,
+				);
+			}
+		}
+
+		// route_defs
+		route_defs[route.method][route.route] = {
+			args: `v.InferInput<typeof argsSchema${index}>`,
+			response: has_response_type
+				? `ResponseType${index}<A>`
+				: can_inline
+					? resolved.text
+					: `ExtractModuleResponse<typeof module${index}>`,
+		};
 	}
 
-	// route_defs
-	route_defs[route.method][route.route] = {
-		args: `v.InferInput<typeof argsSchema${index}>`,
-		response: has_response_type
-			? `ResponseType${index}<A>`
-			: `ExtractModuleResponse<typeof module${index}>`,
-	};
-
 	// console.log('----------');
+}
+
+if (lint_warnings.length > 0) {
+	for (const warning of lint_warnings) {
+		// oxlint-disable-next-line no-console
+		console.warn(`warning: ${warning}`);
+	}
 }
 
 /** Capitalizes the first letter of a string and makes the rest lowercase. */
